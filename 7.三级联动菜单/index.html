@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>三级联动菜单</title>
+</head>
+
+<body>
+  <script type="text/javascript" src="./jquery-1.12.4.js"></script>
+  省份：
+  <select id="province">
+    <option value="">请选择省份</option>
+  </select>
+
+  市：
+  <select id="city">
+    <option value="">请选择市</option>
+  </select>
+
+  区/县：
+  <select id="county">
+    <option value=>请选择区/县</option>
+  </select>
+
+  <script type="text/javascript">
+
+    //获取三个选择框节点(jquery对象)
+    let $province = $('#province')
+    let $city = $('#city')
+    let $country = $('#county')
+
+    $(() => {
+      //一上来就请求中国所有的省份信息，放入省份选择框
+      function getDetailMes(result, obj) {
+        let sign;
+        if (obj == $province) sign = 'province'
+        else if (obj == $city) sign = 'city'
+        else sign = '';
+        let { status, data } = result;
+        if (status == 1) {
+          let str = '<option>请选择省份</option>';
+          // data是一个数组型数据
+          data.forEach(item => {
+            // item.sign 方式系统不会自动转换字符串，而是去找item下的sign属性
+            // 只有使用 item[sign] 才能进行变量转换 
+            str += `<option value="${item[sign]}">${item.name}</option>`
+          })
+          obj.html(str)
+        } else {
+          console.log('获取数据失败，请检查网络')
+        }
+      }
+      $.get('http://localhost:5000/get_all_province', (result) => getDetailMes(result, $province))
+      $province.change(() => { $.get('http://localhost:5000/get_cities_by_province', { province: $province.val() }, (result) => getDetailMes(result, $city)) })
+      $city.change(() => { $.get('http://localhost:5000/get_counties_by_province_and_city', { province: $province.val(), city: $city.val() }, (result) => { getDetailMes(result, $country) }) })
+
+    })
+
+  </script>
+
+</body>
+
+</html>
